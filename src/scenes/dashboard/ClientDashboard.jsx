@@ -8,35 +8,21 @@ import TrafficIcon from "@mui/icons-material/Traffic";
 import Header from "../../components/Header";
 import LineChart from "../../components/LineChart";
 import StatBox from "../../components/StatBox";
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 
-const Dashboard = () => {
+const ClientDashboard = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const navigate = useNavigate();
 
-  // Get the user role from localStorage
-  const userRole = localStorage.getItem("role"); // assuming role is stored in localStorage
-
-  // Redirect based on role
-  useEffect(() => {
-    if (!userRole) {
-      navigate("/login"); // Redirect to login if no role found (not logged in)
-    } else if (userRole === "Client") {
-      navigate("/client-dashboard"); // Redirect to client dashboard if the user is a client
-    } else if (userRole === "Admin") {
-      navigate("/admin-dashboard"); // Redirect to admin dashboard if the user is an admin
-    }
-  }, [userRole, navigate]);
+  // Retrieve the user's name from localStorage
+  const userName = localStorage.getItem("userName");  // Make sure it's stored during login
 
   return (
     <Box m="20px">
       {/* HEADER */}
       <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Header
-          title="DASHBOARD"
-          subtitle={`Welcome ${userRole === "Admin" ? "Admin" : "Client"}`} // Display welcome message based on role
+        <Header 
+          title="Client DASHBOARD" 
+          subtitle={`Welcome, ${userName || "Client"}`}  // Display the user's name or default to "Client"
         />
 
         <Box>
@@ -186,4 +172,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default ClientDashboard;
