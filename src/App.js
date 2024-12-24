@@ -10,6 +10,9 @@ import LoginForm from "./scenes/form/LoginForm";
 import RegisterForm from "./scenes/form/RegisterForm";
 import AdminDashboard from "./scenes/dashboard/AdminDashboard";
 import ClientDashboard from "./scenes/dashboard/ClientDashboard";
+import FolderManagement from "./scenes/Folder/FolderManagement";
+import ClientFolderManagement from "./scenes/Folder/ClientFolderManagement";
+import CreateFolder from "./scenes/Folder/CreateFolder";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -32,6 +35,9 @@ function App() {
               <Route path="/form" element={<Form />} />
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
               <Route path="/client-dashboard" element={<ClientDashboard />} />
+              <Route path="/folders" element={<FolderManagement />} />
+              <Route path="/create-folders" element={<CreateFolder />} />
+              <Route path="/client-folders" element={<ClientFolderManagement />} />
               <Route path="/" element={<LoginForm />} />
               <Route path="/register" element={<RegisterForm />} />
               <Route path="/calendar" element={<Calendar />} />

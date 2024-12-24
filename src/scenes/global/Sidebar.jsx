@@ -8,6 +8,8 @@ import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
+import AddBoxIcon from "@mui/icons-material/AddBox";  // Icon for 'Create Folder'
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -33,11 +35,21 @@ const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
 
-  // Get the user's name from localStorage
+  // Get the user's name and role from localStorage
   const userName = localStorage.getItem("userName");
+  const userRole = localStorage.getItem("role");  // Assuming role is stored as "Admin" or "Client"
 
   // Extract the first letter of the user's name
   const firstLetter = userName ? userName.charAt(0).toUpperCase() : "G";
+
+  // Set the target route based on the user's role
+  const dashboardRoute = userRole === "Admin" ? "/admin-dashboard" : "/client-dashboard";
+
+  // Conditionally set the folder route based on user role
+  const folderRoute = userRole === "Admin" ? "/folders" : "/client-folders";
+
+  // Conditionally render the 'create-folders' link for Admins only
+  const createFolderRoute = userRole === "Admin" ? "/create-folders" : null;
 
   return (
     <Box
@@ -122,9 +134,10 @@ const Sidebar = () => {
           )}
 
           <Box paddingLeft={isCollapsed ? undefined : "10%"}>
+            {/* Conditionally render the Dashboard route */}
             <Item
               title="Dashboard"
-              to="/"
+              to={dashboardRoute} // Dynamic route based on the role
               icon={<HomeOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
@@ -143,6 +156,24 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+            <Item
+              title="Folders"
+              to={folderRoute} // Dynamic route for folders based on user role
+              icon={<FolderOutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+
+            {/* Only show the 'Create Folders' option for Admin */}
+            {createFolderRoute && (
+              <Item
+                title="Create Folders"
+                to={createFolderRoute}
+                icon={<AddBoxIcon />} // Icon for 'Create Folder'
+                selected={selected}
+                setSelected={setSelected}
+              />
+            )}
           </Box>
         </Menu>
       </ProSidebar>

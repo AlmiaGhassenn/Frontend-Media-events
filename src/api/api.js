@@ -19,20 +19,29 @@ export const registerUser = (userData) => API.post("/auth/register", userData);
 export const loginUser = (userData) => API.post("/auth/login", userData);
 
 // Folder APIs
-export const createFolder = (folderData) => API.post("/folders", folderData);
-export const getFolders = () => API.get("/folders");
-export const getFolderById = (folderId) => API.get(`/folders/${folderId}`);
-export const updateFolder = (folderId, folderData) => API.put(`/folders/${folderId}`, folderData);
-export const deleteFolder = (folderId) => API.delete(`/folders/${folderId}`);
+export const createFolder = (folderData) => API.post("/admin/folders", folderData);
+export const getFolders = () => API.get("/admin/folders");
+export const getFolderById = (folderId) => API.get(`/admin/folders/${folderId}`); // If you need a folder by ID
+export const updateFolder = (folderId, folderData) => API.patch(`/admin/folders/${folderId}`, folderData); // Updated to use PATCH for folder updates
+export const deleteFolder = (folderId) => API.delete(`/admin/folders/${folderId}`);
+
+// Admin APIs
+export const createUser = (userData) => API.post("/auth/admin/create-user", userData);
 
 // File APIs
-export const uploadFile = (fileData) =>
-  API.post("/files", fileData, {
+export const uploadFile = (folderId, fileData) =>
+  API.post(`admin/files/${folderId}`, fileData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-export const downloadFile = (fileId) => API.get(`/files/${fileId}`, { responseType: "blob" });
-export const deleteFile = (fileId) => API.delete(`/files/${fileId}`);
+export const downloadFile = (fileId) => API.get(`admin/files/${fileId}`, { responseType: "blob" });
+export const deleteFile = (fileId) => API.delete(`admin/files/${fileId}`);
+// Users API (new function to get users)
 
+// Folder APIs for Client (Shared Folders)
+export const getClientFolders = () => API.get("/client/folders"); // Get folders shared with the client
+export const getClientFolderById = (folderId) => API.get(`/client/folders/${folderId}`); // Get specific folder by ID for the client
+
+export const getUsers = () => API.get("/admin/"); 
 // Permission APIs
-export const updateFolderPermissions = (folderId, permissions) =>
-  API.patch(`/folders/${folderId}/permissions`, { permissions });
+export const updateFolderPermissions = (folderId, permissionsData) =>
+  API.patch(`admin/folders/${folderId}`, permissionsData); // Updated to use PATCH for updating permissions
