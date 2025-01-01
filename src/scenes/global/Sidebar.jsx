@@ -105,7 +105,10 @@ const Sidebar = () => {
                 {/* Display First Letter of User's Name in a Circle */}
                 <Box
                   sx={{
-                    backgroundColor: colors.primary[500], // Background color of circle
+                    backgroundColor:
+                      theme.palette.mode === "light"
+                        ? "#868DFB" // Light mode color
+                        : colors.primary[500], // Dark mode color
                     color: colors.grey[100], // Text color
                     width: "100px",
                     height: "100px",
@@ -142,22 +145,25 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+            {/* Only show 'Ajout D'utilisateur' for Admin */}
+            {userRole === "Admin" && (
+              <Item
+                title="Ajout D'utilisateur"
+                to="/form"
+                icon={<PersonOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+            )}
             <Item
-              title="Profile Form"
-              to="/form"
-              icon={<PersonOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Calendar"
+              title="Calendrier"
               to="/calendar"
               icon={<CalendarTodayOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
-              title="Folders"
+              title="Dossiers"
               to={folderRoute} // Dynamic route for folders based on user role
               icon={<FolderOutlinedIcon />}
               selected={selected}
@@ -167,7 +173,7 @@ const Sidebar = () => {
             {/* Only show the 'Create Folders' option for Admin */}
             {createFolderRoute && (
               <Item
-                title="Create Folders"
+                title="Ajouter Dossier"
                 to={createFolderRoute}
                 icon={<AddBoxIcon />} // Icon for 'Create Folder'
                 selected={selected}

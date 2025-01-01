@@ -11,7 +11,7 @@ const RegisterForm = () => {
   const handleFormSubmit = async (values, { resetForm }) => {
     try {
       await registerUser(values);
-      alert("Registration successful!");
+      alert("Inscription réussie !");
       resetForm();
       navigate("/");
     } catch (error) {
@@ -27,7 +27,7 @@ const RegisterForm = () => {
       height="100vh"
     >
       <Box width="50%" m="20px">
-        <Header title="REGISTER" subtitle="Create a New Account" />
+        <Header title="S'INSCRIRE" subtitle="Cree un nouveau compte" />
 
         <Formik
           onSubmit={handleFormSubmit}
@@ -47,7 +47,7 @@ const RegisterForm = () => {
                 <TextField
                   fullWidth
                   variant="filled"
-                  label="Name"
+                  label="Nom"
                   onBlur={handleBlur}
                   onChange={handleChange}
                   value={values.name}
@@ -72,7 +72,7 @@ const RegisterForm = () => {
                   fullWidth
                   variant="filled"
                   type="password"
-                  label="Password"
+                  label="Mot De Pass"
                   onBlur={handleBlur}
                   onChange={handleChange}
                   value={values.password}
@@ -101,7 +101,7 @@ const RegisterForm = () => {
               </Box>
               <Box display="flex" justifyContent="end" mt="20px">
                 <Button type="submit" color="secondary" variant="contained">
-                  Register
+                S'INSCRIRE
                 </Button>
               </Box>
             </form>
@@ -109,7 +109,7 @@ const RegisterForm = () => {
         </Formik>
         <Box mt="20px" textAlign="center">
       <Typography variant="body2">
-        Already have an account?{" "}
+      Vous avez déjà un compte ?{" "}
         <Link
           to="/"
           style={{
@@ -124,7 +124,7 @@ const RegisterForm = () => {
           onMouseOver={(e) => e.target.style.backgroundColor = "#000"} // Hover background color
           onMouseOut={(e) => e.target.style.backgroundColor = "transparent"} // Remove hover background color
         >
-          Login here
+          Connectez-vous ici
         </Link>
       </Typography>
     </Box>

@@ -3,33 +3,32 @@ import {
   Box,
   Button,
   TextField,
-  MenuItem,
   Typography,
-  Grid,
-  Select,
-  InputLabel,
-  FormControl,
+  List,
+  ListItem,
+  ListItemText,
+  Collapse,
   Pagination,
+  Drawer,
+  InputAdornment,
 } from "@mui/material";
+import { ExpandLess, ExpandMore, Folder as FolderIcon } from "@mui/icons-material";
+import { useTheme } from "@mui/material/styles";
 import Header from "../../components/Header";
-import {
-  getFolders,
-  createFolder,
-  uploadFile,
-  updateFolderPermissions,
-  getUsers,
-} from "../../api/api";
+import { getFolders, uploadFile, deleteFolder } from "../../api/api";
+import SearchIcon from "@mui/icons-material/Search";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 const FolderManagement = () => {
   const [folders, setFolders] = useState([]);
-  const [newFolder, setNewFolder] = useState({ name: "", sharedWith: "", permission: "" });
-  const [selectedFolderId, setSelectedFolderId] = useState("");
+  const [openFolders, setOpenFolders] = useState({});
+  const [selectedFolder, setSelectedFolder] = useState(null);
   const [file, setFile] = useState(null);
-  const [permissions, setPermissions] = useState({ sharedWith: "", permission: "" });
-  const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const foldersPerPage = 9;
+  const filesPerPage = 5;
+  const theme = useTheme();
+  const backgroundColor = theme.palette.mode === "dark" ? "#1E1E1E" : "#fff";
 
   useEffect(() => {
     const fetchFolders = async () => {
@@ -41,188 +40,196 @@ const FolderManagement = () => {
       }
     };
 
-    const fetchUsers = async () => {
-      try {
-        const response = await getUsers();
-        setUsers(response.data);
-      } catch (error) {
-        console.error("Error fetching users:", error.message);
-      }
-    };
-
     fetchFolders();
-    fetchUsers();
   }, []);
 
-  const handleFolderCreate = async () => {
-    try {
-      const response = await createFolder(newFolder);
-      setFolders([...folders, response.data]);
-      setNewFolder({ name: "", sharedWith: "", permission: "" });
-    } catch (error) {
-      console.error("Error creating folder:", error.message);
-    }
+  const toggleFolder = (folderId) => {
+    setOpenFolders((prevState) => ({
+      ...prevState,
+      [folderId]: !prevState[folderId],
+    }));
+  };
+
+  const handleSelectFolder = (folder) => {
+    setSelectedFolder(folder);
+    setFile(null);
   };
 
   const handleFileUpload = async () => {
     const formData = new FormData();
-  
-    // Ensure the 'file' variable is correctly referenced here
     for (const currentFile of file) {
       formData.append("files", currentFile);
     }
-  
+
     try {
-      const response = await uploadFile(selectedFolderId, formData);
-      alert("Files uploaded successfully");
-      console.log('Uploaded files:', response.data);
+      await uploadFile(selectedFolder._id, formData);
+      Swal.fire({
+        title: "Succès!",
+        text: "Les fichiers ont été téléversés avec succès.",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
     } catch (error) {
       console.error("Error uploading files:", error.message);
+      Swal.fire({
+        title: "Erreur!",
+        text: "Une erreur s'est produite lors du téléversement.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
     }
   };
 
-  const handleUpdatePermissions = async () => {
-    try {
-      await updateFolderPermissions(selectedFolderId, permissions);
-      alert(`Folder permissions updated`);
-    } catch (error) {
-      console.error("Error updating folder permissions:", error.message);
-    }
-  };
+  const handleDeleteFolder = async (folderId) => {
+    const result = await Swal.fire({
+      title: "Confirmer la suppression",
+      text: "Voulez-vous vraiment supprimer ce dossier?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Oui, supprimer!",
+      cancelButtonText: "Annuler",
+    });
 
-  const handleSearch = (event) => {
-    setSearchTerm(event.target.value);
+    if (result.isConfirmed) {
+      try {
+        await deleteFolder(folderId);
+        setFolders((prevState) => prevState.filter((folder) => folder._id !== folderId));
+        Swal.fire({
+          title: "Supprimé!",
+          text: "Le dossier a été supprimé avec succès.",
+          icon: "success",
+          confirmButtonText: "OK",
+        });
+      } catch (error) {
+        console.error("Error deleting folder:", error.message);
+        Swal.fire({
+          title: "Erreur!",
+          text: "Une erreur s'est produite lors de la suppression.",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+      }
+    }
   };
 
   const filteredFolders = folders.filter((folder) =>
     folder.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const paginatedFolders = filteredFolders.slice(
-    (currentPage - 1) * foldersPerPage,
-    currentPage * foldersPerPage
-  );
-
-  const handlePageChange = (event, value) => {
-    setCurrentPage(value);
-  };
-
   return (
     <Box m="20px">
-      <Header title="Folder Management" subtitle="Manage your folders efficiently" />
+      <Header title="Gestionnaire de dossiers" subtitle="Gérez vos dossiers efficacement" />
 
       {/* Search Bar */}
-      <Box mb="20px">
-        <TextField
-          label="Search Folders"
-          variant="outlined"
-          fullWidth
-          value={searchTerm}
-          onChange={handleSearch}
-        />
-      </Box>
+      <TextField
+        label="Rechercher Des Dossiers"
+        variant="outlined"
+        fullWidth
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        sx={{
+          mb: 2,
+          backgroundColor: backgroundColor,
+          "& .MuiInputBase-root": {
+            backgroundColor: backgroundColor,
+          },
+        }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon />
+            </InputAdornment>
+          ),
+        }}
+      />
 
-      {/* Folder List */}
-      <Grid container spacing={2}>
-        {paginatedFolders.map((folder) => (
-          <Grid item xs={12} sm={6} md={4} key={folder._id}>
-            <Box border={1} borderRadius={2} p={2} textAlign="center">
-              <Typography variant="h6" fontWeight="bold">
-                {folder.name}
-              </Typography>
+      {/* Folder Tree View */}
+      <List>
+        {filteredFolders.map((folder) => (
+          <React.Fragment key={folder._id}>
+            <ListItem button onClick={() => toggleFolder(folder._id)}>
+              <FolderIcon
+                sx={{
+                  mr: 1,
+                  color: theme.palette.mode === "dark" ? "#70D8BD" : "primary.main",
+                }}
+              />
+              <ListItemText primary={folder.name} />
+              {openFolders[folder._id] ? <ExpandLess /> : <ExpandMore />}
               <Button
-                onClick={() => setSelectedFolderId(folder._id)}
                 variant="outlined"
-                color="secondary"
-                sx={{ mt: 1 }}
+                color="error"
+                onClick={() => handleDeleteFolder(folder._id)}
+                sx={{ ml: 2 }}
               >
-                Select Folder
+                Supprimer
               </Button>
-            </Box>
-          </Grid>
+            </ListItem>
+            <Collapse in={openFolders[folder._id]} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem button onClick={() => handleSelectFolder(folder)}>
+                  <ListItemText primary="Voir les fichiers" />
+                </ListItem>
+              </List>
+            </Collapse>
+          </React.Fragment>
         ))}
-      </Grid>
+      </List>
 
-      {/* Pagination */}
-      <Box mt="20px" display="flex" justifyContent="center">
-        <Pagination
-          count={Math.ceil(filteredFolders.length / foldersPerPage)}
-          page={currentPage}
-          onChange={handlePageChange}
-          color="primary"
-        />
-      </Box>
-
-      {/* Create Folder Form */}
-     
-
-      {/* Folder Info Display */}
-      {selectedFolderId && (
-        <Box mt="20px">
-          <Typography variant="h6">Currently in Folder: {folders.find(f => f._id === selectedFolderId)?.name}</Typography>
+      {/* Drawer for Selected Folder Details */}
+      <Drawer
+        anchor="right"
+        open={Boolean(selectedFolder)}
+        onClose={() => setSelectedFolder(null)}
+      >
+        <Box width="300px" p={2}>
+          {selectedFolder && (
+            <>
+              <Typography variant="h6">{selectedFolder.name}</Typography>
+              {/* File Upload */}
+              <Box mt={2}>
+                <Typography variant="subtitle1">Téléverser Fichier</Typography>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(e) => setFile(e.target.files)}
+                  style={{ marginTop: "8px" }}
+                />
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleFileUpload}
+                  sx={{ mt: 2 }}
+                >
+                  Téléverser
+                </Button>
+              </Box>
+              {/* Files in the Folder */}
+              <Box mt={3}>
+                <Typography variant="subtitle1">Fichiers</Typography>
+                <List>
+                  {selectedFolder.files
+                    ?.slice(
+                      (currentPage - 1) * filesPerPage,
+                      currentPage * filesPerPage
+                    )
+                    .map((file, index) => (
+                      <ListItem key={index}>
+                        <ListItemText primary={file.name} />
+                      </ListItem>
+                    ))}
+                </List>
+                <Pagination
+                  count={Math.ceil((selectedFolder.files?.length || 0) / filesPerPage)}
+                  page={currentPage}
+                  onChange={(e, value) => setCurrentPage(value)}
+                  sx={{ mt: 2 }}
+                />
+              </Box>
+            </>
+          )}
         </Box>
-      )}
-
-      {/* File Upload Form */}
-      {selectedFolderId && (
-        <Box mt="20px">
-          <Typography variant="h6">Upload File to Selected Folder</Typography>
-          <input
-            type="file"
-            multiple
-            onChange={(e) => setFile(e.target.files)}
-          />
-
-          <Button
-            onClick={handleFileUpload}
-            variant="contained"
-            color="secondary"
-            sx={{ mt: 2 }}
-          >
-            Upload File
-          </Button>
-        </Box>
-      )}
-
-      {/* Update Permissions */}
-      {selectedFolderId && (
-        <Box mt="20px">
-          <Typography variant="h6">Update Folder Permissions</Typography>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Shared With</InputLabel>
-            <Select
-              value={permissions.sharedWith}
-              onChange={(e) => setPermissions({ ...permissions, sharedWith: e.target.value })}
-              label="Shared With"
-            >
-              {users.map((user) => (
-                <MenuItem key={user._id} value={user._id}>
-                  {user.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Permission</InputLabel>
-            <Select
-              value={permissions.permission}
-              onChange={(e) => setPermissions({ ...permissions, permission: e.target.value })}
-              label="Permission"
-            >
-              <MenuItem value="consult">Consult</MenuItem>
-              <MenuItem value="download">Download</MenuItem>
-            </Select>
-          </FormControl>
-          <Button
-            onClick={handleUpdatePermissions}
-            variant="contained"
-            color="secondary"
-            sx={{ mt: 2 }}
-          >
-            Update Permissions
-          </Button>
-        </Box>
-      )}
+      </Drawer>
     </Box>
   );
 };

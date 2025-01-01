@@ -40,6 +40,11 @@ export const deleteFile = (fileId) => API.delete(`admin/files/${fileId}`);
 // Folder APIs for Client (Shared Folders)
 export const getClientFolders = () => API.get("/client/folders"); // Get folders shared with the client
 export const getClientFolderById = (folderId) => API.get(`/client/folders/${folderId}`); // Get specific folder by ID for the client
+// File Preview API
+export const getFilePreview = (fileId) =>
+  API.get(`/client/files/preview/${fileId}`, { responseType: "blob" });
+// Delete User
+export const deleteUser = (userId) => API.delete(`/admin/users/${userId}`);
 
 export const getUsers = () => API.get("/admin/"); 
 // Permission APIs

@@ -5,6 +5,7 @@ import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createUser } from "../../api/api"; // Import the API function for creating a user
 import Header from "../../components/Header";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 const CreateUserForm = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
@@ -16,26 +17,40 @@ const CreateUserForm = () => {
       if (!token) throw new Error("No token found. Please log in.");
 
       // Send the request to create the user
-      const response = await createUser({
+      await createUser({
         name: values.name,
         email: values.email,
         password: values.password,
         role: values.role,
       });
 
-      alert(`User created successfully`);
-      resetForm();
+      // Success alert
+      Swal.fire({
+        title: "Succès!",
+        text: "L'utilisateur a été créé avec succès.",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+
+      resetForm(); // Reset the form fields
     } catch (error) {
       console.error("Error details:", error.response || error.message);
+
+      // Error alert
       const message =
-        error.response?.data?.message || error.message || "Something went wrong";
-      alert(message);
+        error.response?.data?.message || error.message || "Une erreur s'est produite.";
+      Swal.fire({
+        title: "Erreur!",
+        text: message,
+        icon: "error",
+        confirmButtonText: "OK",
+      });
     }
   };
 
   return (
     <Box m="20px">
-      <Header title="CREATE Client" subtitle="Create a New Client Profile" />
+      <Header title="Ajout Client" subtitle="Ajouter un nouveau Profile" />
 
       <Formik
         initialValues={initialValues}
@@ -64,7 +79,7 @@ const CreateUserForm = () => {
                 fullWidth
                 variant="filled"
                 type="text"
-                label="Name"
+                label="Nom"
                 name="name"
                 onBlur={handleBlur}
                 onChange={handleChange}
@@ -94,7 +109,7 @@ const CreateUserForm = () => {
                 fullWidth
                 variant="filled"
                 type="password"
-                label="Password"
+                label="Mot De Pass"
                 name="password"
                 onBlur={handleBlur}
                 onChange={handleChange}
@@ -126,7 +141,7 @@ const CreateUserForm = () => {
             {/* Submit button */}
             <Box display="flex" justifyContent="end" mt="20px">
               <Button type="submit" color="secondary" variant="contained">
-                Create User
+                Cree Client
               </Button>
             </Box>
           </form>
