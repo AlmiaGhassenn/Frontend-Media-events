@@ -35,6 +35,9 @@ export const uploadFile = (folderId, fileData) =>
   });
 export const downloadFile = (fileId) => API.get(`admin/files/${fileId}`, { responseType: "blob" });
 export const deleteFile = (fileId) => API.delete(`admin/files/${fileId}`);
+
+export const deleteFolderFile = (folderId, fileId) =>
+  API.delete(`/admin/files/${folderId}/${fileId}`);
 // Users API (new function to get users)
 
 // Folder APIs for Client (Shared Folders)

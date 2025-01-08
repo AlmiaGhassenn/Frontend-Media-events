@@ -15,7 +15,7 @@ import {
 import { ExpandLess, ExpandMore, Folder as FolderIcon } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import Header from "../../components/Header";
-import { getFolders, uploadFile, deleteFolder } from "../../api/api";
+import { getFolders, uploadFile, deleteFolder, deleteFolderFile } from "../../api/api"; // Add deleteFolderFile
 import SearchIcon from "@mui/icons-material/Search";
 import Swal from "sweetalert2"; // Import SweetAlert2
 
@@ -111,6 +111,44 @@ const FolderManagement = () => {
       }
     }
   };
+
+<Button
+  variant="outlined"
+  color="error"
+  onClick={(e) => handleDeleteFile(selectedFolder._id, file._id, e)}
+  sx={{ ml: 2 }}
+>
+  Supprimer
+</Button>
+const handleDeleteFile = async (folderId, fileId) => {
+  try {
+    // Directly delete the file without confirmation
+    await deleteFolderFile(folderId, fileId);
+
+    // Remove the file from the folder's file list in the state
+    setSelectedFolder((prevState) => ({
+      ...prevState,
+      files: prevState.files.filter((file) => file._id !== fileId),
+    }));
+
+    Swal.fire({
+      title: "Supprimé!",
+      text: "Le fichier a été supprimé avec succès.",
+      icon: "success",
+      confirmButtonText: "OK",
+    });
+  } catch (error) {
+    console.error("Error deleting file:", error.message);
+    Swal.fire({
+      title: "Erreur!",
+      text: "Une erreur s'est produite lors de la suppression.",
+      icon: "error",
+      confirmButtonText: "OK",
+    });
+  }
+};
+
+  
 
   const filteredFolders = folders.filter((folder) =>
     folder.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -216,6 +254,15 @@ const FolderManagement = () => {
                     .map((file, index) => (
                       <ListItem key={index}>
                         <ListItemText primary={file.name} />
+                        <Button
+  variant="outlined"
+  color="error"
+  onClick={() => handleDeleteFile(selectedFolder._id, file._id)} // Immediate file deletion
+  sx={{ ml: 2 }}
+>
+  Supprimer
+</Button>
+
                       </ListItem>
                     ))}
                 </List>

@@ -47,10 +47,12 @@ const ClientFolderManagement = () => {
   const [expandedFolders, setExpandedFolders] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [filePage, setFilePage] = useState({}); // Track file pagination for each folder
   const [themeMode, setThemeMode] = useState("dark");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState(null);
   const foldersPerPage = 6;
+  const filesPerPage = 6; // Pagination for files
 
   useEffect(() => {
     const fetchFolders = async () => {
@@ -136,16 +138,30 @@ const ClientFolderManagement = () => {
   const handleSearch = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
+    
     const filtered = folders.filter((folder) => {
+      // Check if the folder name matches the query
       const folderMatches = folder.name.toLowerCase().includes(query);
+      
+      // Check if any file inside the folder matches the query
       const filesMatch = folder.files.some((file) =>
         file.name.toLowerCase().includes(query)
       );
+      
+      // Return the folder if either the folder name or any file name matches the query
       return folderMatches || filesMatch;
-    });
+    }).map((folder) => ({
+      ...folder,
+      // Filter the files that match the query for each folder
+      files: folder.files.filter((file) =>
+        file.name.toLowerCase().includes(query)
+      ),
+    }));
+  
     setFilteredFolders(filtered);
     setPage(1); // Reset to the first page after search
   };
+  
 
   // Handle preview click
   const handlePreview = async (fileId) => {
@@ -186,17 +202,23 @@ const ClientFolderManagement = () => {
     }
   };
   
-  
-
   const closePreview = () => {
     setPreviewOpen(false);
     setPreviewFile(null);
   };
 
+  // Pagination for files within each folder
   const paginatedFolders = filteredFolders.slice(
     (page - 1) * foldersPerPage,
     page * foldersPerPage
   );
+
+  const handleFilePaginationChange = (folderId, value) => {
+    setFilePage((prev) => ({
+      ...prev,
+      [folderId]: value,
+    }));
+  };
 
   return (
     <ThemeProvider theme={themeMode === "dark" ? darkTheme : lightTheme}>
@@ -268,37 +290,77 @@ const ClientFolderManagement = () => {
                             </Typography>
                           </IconButton>
                         </Grid>
-                        {folder.files.map((file) => (
-                          <Grid item xs={12} sm={6} md={4} key={file._id}>
-                            <Card
-                              sx={{
-                                backgroundColor: themeMode === "dark" ? "#616161" : "#f5f5f5",
-                                boxShadow: 2,
-                                borderRadius: 2,
-                              }}
-                            >
-                              <CardContent>
-                                <Typography variant="body2" color={themeMode === "dark" ? "#fff" : "#000"}>
-                                  {file.name}
-                                </Typography>
-                                <IconButton
-                                  color="primary"
-                                  onClick={() => handleFileDownload(file._id)}
-                                >
-                                  <Download />
-                                </IconButton>
-                                <IconButton
-                                  color="primary"
-                                  onClick={() => handlePreview(file._id)}
-                                  sx={{ ml: 1 }}
-                                >
-                                  <Visibility />
-                                </IconButton>
-                              </CardContent>
-                            </Card>
-                          </Grid>
-                        ))}
+                        {folder.files
+  .slice(
+    (filePage[folder._id] - 1 || 0) * filesPerPage,
+    (filePage[folder._id] || 1) * filesPerPage
+  )
+  .map((file) => (
+    <Grid item xs={12} sm={6} md={4} key={file._id}>
+      <Card
+        sx={{
+          backgroundColor: themeMode === "dark" ? "#616161" : "#f5f5f5",
+          boxShadow: 2,
+          borderRadius: 2,
+        }}
+      >
+        <CardContent>
+          {/* Display Image if File is an Image */}
+          {file.url && file.url.match(/\.(jpeg|jpg|png|gif)$/i) ? (
+            <img
+              src={`http://localhost:5000${file.url}`}
+              alt={file.name}
+              onError={(e) => {
+                console.error("Error loading image:", file.url);
+                e.target.src = "/placeholder-image.png"; // Fallback image
+              }}
+              style={{
+                width: "100%",
+                height: "200px",
+                objectFit: "cover",
+                borderRadius: "8px",
+                marginBottom: "8px",
+              }}
+            />
+          ) : (
+            <Typography variant="body2" color="textSecondary">
+              {file.name}
+            </Typography>
+          )}
+
+          <Box mt={2} display="flex" justifyContent="space-between">
+            <IconButton
+              color="primary"
+              onClick={() => handleFileDownload(file._id)}
+            >
+              <Download />
+            </IconButton>
+
+            <Typography variant="body2" sx={{ ml: 2, mr: 2 }} color="textSecondary">
+    {file.name}
+  </Typography>
+            <IconButton
+              color="primary"
+              onClick={() => handlePreview(file._id)}
+            >
+              <Visibility />
+            </IconButton>
+          </Box>
+        </CardContent>
+      </Card>
+    </Grid>
+  ))}
+
                       </Grid>
+
+                      <Pagination
+                        count={Math.ceil(folder.files.length / filesPerPage)}
+                        page={filePage[folder._id] || 1}
+                        onChange={(event, value) =>
+                          handleFilePaginationChange(folder._id, value)
+                        }
+                        sx={{ mt: 3 }}
+                      />
                     </CardContent>
                   </Collapse>
                 </Card>
@@ -311,36 +373,40 @@ const ClientFolderManagement = () => {
           count={Math.ceil(filteredFolders.length / foldersPerPage)}
           page={page}
           onChange={(event, value) => setPage(value)}
-          sx={{ display: "flex", justifyContent: "center", mt: 3 }}
+          sx={{ mt: 3, display: "flex", justifyContent: "center" }}
         />
-      </Box>
 
-      <Modal open={previewOpen} onClose={closePreview}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            backgroundColor: "background.paper",
-            padding: 2,
-            borderRadius: 1,
-            boxShadow: 3,
-          }}
-        >
-          {previewFile && previewFile.type.startsWith('image') ? (
-            <img
-              src={previewFile.url}
-              alt={previewFile.name}
-              style={{ width: '100%', height: 'auto' }}
-            />
-          ) : (
-            <Typography variant="h6" color="text.primary">
-              Preview not available
-            </Typography>
-          )}
-        </Box>
-      </Modal>
+        {/* Preview Modal */}
+        <Modal open={previewOpen} onClose={closePreview}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 600,
+              backgroundColor: themeMode === "dark" ? "#424242" : "#fff",
+              padding: 2,
+              borderRadius: 2,
+              boxShadow: 3,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            {previewFile && previewFile.type.startsWith("image") ? (
+              <img
+                src={previewFile.url}
+                alt="Preview"
+                style={{ maxWidth: "100%", maxHeight: "500px" }}
+              />
+            ) : (
+              <Typography color="textSecondary">
+                No preview available for this file.
+              </Typography>
+            )}
+          </Box>
+        </Modal>
+      </Box>
     </ThemeProvider>
   );
 };
